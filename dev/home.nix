@@ -8,6 +8,7 @@ let
   else {
     ssh_match_blocks = { };
     git_includes = [ ];
+    git_hook_blacklist = "some_git_regex_for_blocking_before_commit";
     git_extra = { };
   };
 in {
@@ -16,6 +17,7 @@ in {
   home.packages = with pkgs; [ age devenv fzf htop jaq ripgrep tlrc tree ];
   home.file = {
     ".config/git/ignore_misc".text = lib.concatStringsSep "\n" [
+      "CLAUDE.md"
       ".claude/"
       ".devenv*"
       ".direnv*"
@@ -25,6 +27,42 @@ in {
       "devenv*"
       "direnv*"
     ];
+    ".config/git/template/hooks/pre-commit" = {
+      text = ''
+        #! /bin/sh
+        exec ~/.config/git/pre-commit "$@"''; # no need to update each git repo for gen
+      executable = true;
+    };
+    ".config/git/template/hooks/commit-msg" = {
+      text = ''
+        #! /bin/sh
+        exec ~/.config/git/commit-msg "$@"'';
+      executable = true;
+    };
+    ".config/git/pre-commit" = {
+      text = ''
+        #!/usr/bin/env bash
+        against=$(git rev-parse --verify HEAD 2>/dev/null || \
+                  echo "4b825dc642cb6eb9a060e54bf8d69288fbee4904") # empty tree
+        if git diff --cached --no-ext-diff "$against" | grep -Eiq '${personal.git_hook_blacklist}'; then
+          echo "! Commit blocked - ${personal.git_hook_blacklist} pattern is forbidden"
+          exit 1
+        fi
+        exit 0
+      '';
+      executable = true;
+    };
+    ".config/git/commit-msg" = {
+      text = ''
+        #!/usr/bin/env bash
+        grep -qi '${personal.git_hook_blacklist}' "$1" && {
+          echo "! Commit blocked - ${personal.git_hook_blacklist} pattern is forbidden"
+          exit 1
+        }
+        exit 0
+      '';
+      executable = true;
+    };
   };
 
   programs = {
@@ -50,7 +88,10 @@ in {
         column.ui = "auto";
         branch.sort = "-committerdate";
         tag.sort = "version:refname";
-        init.defaultBranch = "main";
+        init = {
+          defaultBranch = "main";
+          templateDir = "~/.config/git/template";
+        };
         diff = {
           algorithm = "histogram";
           mnemonicPrefix = true;
