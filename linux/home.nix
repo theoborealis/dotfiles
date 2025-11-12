@@ -161,6 +161,7 @@
     wl-screenrec
     wl-clipboard
     tor-browser
+    qbittorrent-enhanced
 
     android-tools
     binsider
@@ -172,7 +173,6 @@
     mediainfo
     netcat
     tesseract
-    podman-compose
 
     inter
     nerd-fonts.symbols-only
@@ -207,7 +207,7 @@
       bind = [
         "$mod, Q, killactive"
         "$mod, O, exit"
-        "$mod, L, exec, /usr/bin/hyprlock"
+        "$mod, Escape, exec, /usr/bin/hyprlock"
         "$mod, T, exec, kitty"
         "$mod, B, exec, librewolf"
         "$mod, V, exec, kitty --class clipse -e 'clipse'"
@@ -223,6 +223,11 @@
         "$mod, H, movefocus, l"
         "$mod, L, movefocus, r"
         "$mod, Tab, changegroupactive, f"
+        "$mod, S, togglesplit"
+        "$mod CTRL, H, movewindow, l"
+        "$mod CTRL, J, movewindow, d"
+        "$mod CTRL, K, movewindow, u"
+        "$mod CTRL, L, movewindow, r"
       ] ++ workspaces;
       bindl = [ ",switch:Lid Switch, exec, /usr/bin/hyprlock" ];
       bindel = [
@@ -265,6 +270,10 @@
         "workspace 3, class:code"
         "workspace 4, class:ableton live 12 suite.exe"
         "group set vscode, class:code"
+        "float, class:org.keepassxc.KeePassXC, title:KeePassXC -.*Access Request"
+        "pin, class:org.keepassxc.KeePassXC, title:KeePassXC -.*Access Request"
+        "stayfocused, class:org.keepassxc.KeePassXC, title:KeePassXC -.*Access Request"
+        "center, class:org.keepassxc.KeePassXC, title:KeePassXC -.*Access Request"
       ];
       group.groupbar.enabled = false;
       misc = {
@@ -361,12 +370,6 @@
       store.cleanup = true;
     };
     hyprpolkitagent.enable = true;
-    podman = {
-      enable = true;
-      settings.storage = {
-        storage.options.overlay = { ignore_chown_errors = "true"; };
-      };
-    };
     ssh-agent.enable = true;
     # wluma = { # depends on vulkan
     #   enable = true;
@@ -581,7 +584,10 @@
             "format-connected" = "";
             "tooltip" = false;
           };
-          "tray" = { "icon-size" = 12; };
+          "tray" = {
+                "icon-size" = 12;
+                "spacing" = 5;
+              };
         };
       };
       style = ''
@@ -728,14 +734,16 @@
           Punctuation = true;
           Quotes = true;
         };
-        Security.LockDatabaseScreenLock = false;
+        Security = {
+          LockDatabaseScreenLock = false;
+          LockDatabaseIdle = false;
+        };
         SSHAgent = {
           Enabled = true;
           AuthSockOverride = "/run/user/1000/ssh-agent";
         };
       };
     };
-    rtorrent = { enable = true; };
   };
 
   stylix = {
