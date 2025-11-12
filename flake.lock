@@ -142,18 +142,20 @@
     "gnome-shell": {
       "flake": false,
       "locked": {
-        "lastModified": 1748186689,
-        "narHash": "sha256-UaD7Y9f8iuLBMGHXeJlRu6U1Ggw5B9JnkFs3enZlap0=",
+        "host": "gitlab.gnome.org",
+        "lastModified": 1762869044,
+        "narHash": "sha256-nwm/GJ2Syigf7VccLAZ66mFC8mZJFqpJmIxSGKl7+Ds=",
         "owner": "GNOME",
         "repo": "gnome-shell",
-        "rev": "8c88f917db0f1f0d80fa55206c863d3746fa18d0",
-        "type": "github"
+        "rev": "680e3d195a92203f28d4bf8c6e8bb537cc3ed4ad",
+        "type": "gitlab"
       },
       "original": {
+        "host": "gitlab.gnome.org",
         "owner": "GNOME",
-        "ref": "48.2",
+        "ref": "gnome-49",
         "repo": "gnome-shell",
-        "type": "github"
+        "type": "gitlab"
       }
     },
     "home-manager": {
@@ -163,11 +165,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1762787259,
-        "narHash": "sha256-t2U/GLLXHa2+kJkwnFNRVc2fEJ/lUfyZXBE5iKzJdcs=",
+        "lastModified": 1763416652,
+        "narHash": "sha256-8EBEEvtzQ11LCxpQHMNEBQAGtQiCu/pqP9zSovDSbNM=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "37a3d97f2873e0f68711117c34d04b7c7ead8f4e",
+        "rev": "ea164b7c9ccdc2321379c2ff78fd4317b4c41312",
         "type": "github"
       },
       "original": {
@@ -199,16 +201,16 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1760344866,
-        "narHash": "sha256-gk73/EdE+/MLFqPVWMjiZqHMkzbu7M9pts3IwGl23IE=",
+        "lastModified": 1763586201,
+        "narHash": "sha256-G3IKmNhC68WTHLY4dUCBqK32zzOgGAPIhtEA/hnoKII=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "557f25ca18370029c7f641a7f7dfcf5612687d23",
+        "rev": "14f7db3ba24eed9e904a2ed004aec78c2fcb8af2",
         "type": "github"
       },
       "original": {
         "id": "nixpkgs",
-        "rev": "557f25ca18370029c7f641a7f7dfcf5612687d23",
+        "rev": "14f7db3ba24eed9e904a2ed004aec78c2fcb8af2",
         "type": "indirect"
       }
     },
@@ -266,11 +268,11 @@
         "tinted-zed": "tinted-zed"
       },
       "locked": {
-        "lastModified": 1762264356,
-        "narHash": "sha256-QVfC53Ri+8n3e7Ujx9kq6all3+TLBRRPRnc6No5qY5w=",
+        "lastModified": 1763578087,
+        "narHash": "sha256-NUTbu1mA8Rc4HBxYDyuS6moYix8kSNoWa8g7LAH9onE=",
         "owner": "danth",
         "repo": "stylix",
-        "rev": "647bb8dd96a206a1b79c4fd714affc88b409e10b",
+        "rev": "ab29ae14d782a689ed07dcb6459acc1d20ce0908",
         "type": "github"
       },
       "original": {
