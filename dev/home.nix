@@ -1,30 +1,22 @@
 { inputs, username, homeDirectory, config, lib, pkgs, ... }:
 
 let
-  personalFile =
-    "${config.home.homeDirectory}/.config/home-manager/personal.nix";
-  personal = if builtins.pathExists personalFile then
-    import personalFile { inherit homeDirectory; }
-  else {
-    ssh_match_blocks = { };
-    git_includes = [ ];
-    git_extra = { };
-  };
+  personalFile = "${homeDirectory}/.config/home-manager/personal.nix";
+  isTermux = pkgs.stdenv.hostPlatform.isAarch64 && !config.systemd.user.enable
+    && !config.targets.genericLinux.gpu.enable;
 in {
+  imports = lib.optional (builtins.pathExists personalFile) personalFile;
 
   home.sessionVariables = { CARGO_HOME = "$HOME/.cache/cargo"; };
-  home.packages = with pkgs; [ age devenv fzf htop jaq ripgrep tlrc tree ];
-  home.file = {
-    ".config/git/ignore_misc".text = lib.concatStringsSep "\n" [
-      ".claude/"
-      ".devenv*"
-      ".direnv*"
-      ".envrc"
-      ".helix/"
-      ".pre-commit-config.yaml"
-      "devenv*"
-      "direnv*"
-    ];
+  home.packages = with pkgs;
+    [ age devenv fzf htop jaq ripgrep tlrc tree ]
+    ++ lib.optionals (!isTermux) [ podman-compose ];
+
+  services.podman = lib.mkIf (!isTermux) {
+    enable = true;
+    settings.storage = {
+      storage.options.overlay = { ignore_chown_errors = "true"; };
+    };
   };
 
   programs = {
@@ -44,13 +36,16 @@ in {
         ".pre-commit-config.yaml"
       ];
       lfs.enable = true;
-      settings = personal.git_extra // {
+      settings = {
         user.email = "johndoe@example.com";
         user.name = "John Doe";
         column.ui = "auto";
         branch.sort = "-committerdate";
         tag.sort = "version:refname";
-        init.defaultBranch = "main";
+        init = {
+          defaultBranch = "main";
+          templateDir = "~/.config/git/template";
+        };
         diff = {
           algorithm = "histogram";
           mnemonicPrefix = true;
@@ -78,13 +73,13 @@ in {
           updateRefs = true;
         };
       };
-      includes = personal.git_includes;
+      includes = [ ];
     };
     gitui.enable = true;
     ssh = {
       enable = true;
       enableDefaultConfig = false;
-      matchBlocks = personal.ssh_match_blocks // {
+      matchBlocks = {
         "*" = {
           addKeysToAgent = "yes";
           identitiesOnly = true;
@@ -166,6 +161,7 @@ in {
       enable = true;
       enableCompletion = true;
       autosuggestion.enable = true;
+      dotDir = "${config.xdg.configHome}/zsh";
       localVariables = { ZSH_COMPDUMP = "$HOME/.cache/.zcompdump-$HOST"; };
       history = {
         share = false;
@@ -179,11 +175,20 @@ in {
         zshConfig = lib.mkOrder 1500 ''
           eval "$(fzf --zsh| sed -e '/zmodload/s/perl/perl_off/' -e '/selected/s/fc -rl/fc -rlt "%y-%m-%d"/')"'';
       in lib.mkMerge [ zshConfig ];
+      shellAliases = { jq = "jaq"; };
       siteFunctions = {
         gclone = ''
           gitstrip="''${1#*:}"; gitpath="''${gitstrip%.git}"; git clone "$1" "''${gitpath%.git}"'';
         mkcd = ''mkdir --parents "$1" && cd "$1"'';
         tch = ''mkdir --parents "$(dirname "$@")" && touch "$@"'';
+        grehook = ''
+          find "''${1:-.}" -type d -name ".git" 2>/dev/null | while read -r gitdir; do
+            repo_dir=$(dirname "$gitdir")
+            echo "Reinitializing: $repo_dir"
+            rm -r $repo_dir/.git/hooks
+            git -C "$repo_dir" init
+          done
+        '';
       };
       prezto = {
         enable = false;

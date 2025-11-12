@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "nixpkgs/557f25ca18370029c7f641a7f7dfcf5612687d23";
+    nixpkgs.url = "nixpkgs/d599e459065269b8e0de294ccc73b28ba30ab480";
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -26,6 +26,10 @@
           username = androidUser;
         };
         "${linuxUser}@linux" = import ./linux {
+          inherit inputs;
+          username = linuxUser;
+        };
+        "${linuxUser}@vps" = import ./vps {
           inherit inputs;
           username = linuxUser;
         };
