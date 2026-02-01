@@ -27,6 +27,20 @@ let
 in
 {
   imports = lib.optional (builtins.pathExists personalFile) personalFile;
+  nixpkgs.overlays = [
+    (final: prev: {
+      ec = prev.ec.overrideAttrs (old: rec {
+        version = "0.2.3";
+        src = prev.fetchFromGitHub {
+          owner = "chojs23";
+          repo = "ec";
+          rev = "v${version}";
+          hash = "sha256-HeScFrWVXw1iLC3VdocoCO/zJjhghuaOaML+qjMtk+M=";
+        };
+        vendorHash = "sha256-bV5y8zKculYULkFl9J95qebLOzdTT/LuYycqMmHKZ+g=";
+      });
+    })
+  ];
   nix = {
     package = pkgs.nix;
     settings.experimental-features = [
@@ -143,6 +157,8 @@ in
         init.defaultBranch = "main";
         diff = {
           algorithm = "histogram";
+          colorMoved = "zebra";
+          colorMovedWS = "allow-indentation-change";
           mnemonicPrefix = true;
           renames = true;
         };
@@ -155,7 +171,9 @@ in
           prune = true;
           pruneTags = true;
           all = true;
+          writeCommitGraph = true;
         };
+        transfer.fsckObjects = true;
         help.autocorrect = "prompt";
         commit.verbose = true;
         rerere = {

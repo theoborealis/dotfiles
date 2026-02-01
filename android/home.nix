@@ -18,7 +18,6 @@
     enable = true;
     gpu.enable = false;
   };
-
   home = {
     inherit username homeDirectory;
     stateVersion = "25.05";
