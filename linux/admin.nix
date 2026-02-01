@@ -189,6 +189,7 @@
     bluetui
     exiv2
     fastfetch
+    inputs.sshf.packages.${pkgs.system}.default
     go-chromecast
     htop
     libarchive

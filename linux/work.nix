@@ -24,7 +24,7 @@
       SSH_AUTH_SOCK = "/tmp/work-ssh-agent.sock";
     };
     shellAliases = {
-      hmu = "NIXPKGS_ALLOW_UNFREE=1 home-manager switch --flake ~/.config/home-manager#work@linux --impure";
+      hmu = "NIXPKGS_ALLOW_UNFREE=1 home-manager switch --flake 'path:${homeDirectory}/.config/home-manager#work@linux' --impure";
     };
   };
 
