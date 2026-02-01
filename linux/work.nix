@@ -21,12 +21,16 @@
     stateVersion = "25.05";
     sessionVariables = {
       TERM = "xterm-256color";
-      SSH_AUTH_SOCK = "/tmp/work-ssh-agent.sock";
+      SSH_AUTH_SOCK = "/run/user/1000/sshf.sock";
     };
     shellAliases = {
-      hmu = "NIXPKGS_ALLOW_UNFREE=1 home-manager switch --flake ~/.config/home-manager#work@linux --impure";
+      hmu = "NIXPKGS_ALLOW_UNFREE=1 home-manager switch --flake 'path:${homeDirectory}/.config/home-manager#work@linux' --impure";
     };
   };
+
+  home.packages = with pkgs; [
+    fastfetch
+  ];
 
   systemd.user = {
     enable = true;
@@ -35,7 +39,6 @@
   };
 
   services = {
-    ssh-agent.enable = false; # using admin's proxied agent
     home-manager.autoExpire = {
       enable = true;
       frequency = "weekly";

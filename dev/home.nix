@@ -42,10 +42,10 @@ in
       GRADLE_USER_HOME = "$HOME/.cache";
       BUILDAH_FORMAT = "docker";
       DOCKER_CONFIG = "$HOME/.config/docker";
+      # Source HM session vars for non-interactive bash scripts (#!/bin/bash)
+      BASH_ENV = "$HOME/.nix-profile/etc/profile.d/hm-session-vars.sh";
     };
-    shellAliases = {
-      jq = "jaq";
-    };
+    shellAliases = { };
   };
 
   home.packages =
@@ -53,8 +53,11 @@ in
     [
       age
       devenv
+      ec
       fzf
       jaq
+      (pkgs.writeShellScriptBin "jq" ''exec jaq "$@"'')
+      mergiraf
       ripgrep
       tlrc
       tree
@@ -71,40 +74,43 @@ in
     };
   };
 
-
   programs = {
     home-manager.enable = true;
     claude-code = {
       enable = true;
-      package = pkgs.claude-code.overrideAttrs (old: rec {
-        version = "2.0.64";
-        src = pkgs.fetchurl {
-          url = "https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-${version}.tgz";
-          hash = "sha256-H75i1x580KdlVjKH9V6a2FvPqoREK004CQAlB3t6rZ0=";
-        };
-        packageLock = pkgs.fetchurl {
-          url = "https://raw.githubusercontent.com/NixOS/nixpkgs/d81147f1f1f508c6a62b7182b991aa1500e48cbe/pkgs/by-name/cl/claude-code/package-lock.json";
-          hash = "sha256-u3zwMA/I/Np/DD2JDZyoKqByx+gP6c3EZvc+v+c42xA=";
-        };
-        npmDepsHash = "sha256-x1YerDQP1+kNS+mdIqSAE1e81fsd855KdJM+VBxaUBQ=";
-        npmDeps = pkgs.fetchNpmDeps {
-          inherit src;
-          name = "${old.pname}-${version}-npm-deps";
-          hash = npmDepsHash;
-          postPatch = ''
-            cp ${packageLock} package-lock.json
-          '';
-        };
-        postPatch = ''
-          cp ${packageLock} package-lock.json
-          substituteInPlace cli.js \
-            --replace-warn '#!/bin/bash' '#!/usr/bin/env bash'
-        '';
-      });
+      # package = pkgs.claude-code.overrideAttrs (old: rec {
+      #   version = "2.0.64";
+      #   src = pkgs.fetchurl {
+      #     url = "https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-${version}.tgz";
+      #     hash = "sha256-H75i1x580KdlVjKH9V6a2FvPqoREK004CQAlB3t6rZ0=";
+      #   };
+      #   packageLock = pkgs.fetchurl {
+      #     url = "https://raw.githubusercontent.com/NixOS/nixpkgs/d81147f1f1f508c6a62b7182b991aa1500e48cbe/pkgs/by-name/cl/claude-code/package-lock.json";
+      #     hash = "sha256-u3zwMA/I/Np/DD2JDZyoKqByx+gP6c3EZvc+v+c42xA=";
+      #   };
+      #   npmDepsHash = "sha256-x1YerDQP1+kNS+mdIqSAE1e81fsd855KdJM+VBxaUBQ=";
+      #   npmDeps = pkgs.fetchNpmDeps {
+      #     inherit src;
+      #     name = "${old.pname}-${version}-npm-deps";
+      #     hash = npmDepsHash;
+      #     postPatch = ''
+      #       cp ${packageLock} package-lock.json
+      #     '';
+      #   };
+      #   postPatch = ''
+      #     cp ${packageLock} package-lock.json
+      #     substituteInPlace cli.js \
+      #       --replace-warn '#!/bin/bash' '#!/usr/bin/env bash'
+      #   '';
+      # });
     };
     delta = {
       enable = true;
       enableGitIntegration = true;
+      options = {
+        side-by-side = true;
+        hyperlinks = true;
+      };
     };
     git = {
       enable = true;
@@ -127,6 +133,7 @@ in
         ".pre-commit-config.yaml"
       ];
       lfs.enable = true;
+      attributes = [ "* merge=mergiraf" ];
       settings = {
         user.email = lib.mkDefault "johndoe@example.com";
         user.name = lib.mkDefault "John Doe";
@@ -154,6 +161,20 @@ in
         rerere = {
           enabled = true;
           autoupdate = true;
+        };
+        merge = {
+          conflictStyle = "zdiff3";
+          tool = "ec";
+          mergiraf = {
+            name = "mergiraf";
+            driver = "mergiraf merge --git %O %A %B -s %S -x %X -y %Y -p %P -l %L";
+          };
+        };
+        mergetool = {
+          ec = {
+            cmd = ''ec "$BASE" "$LOCAL" "$REMOTE" "$MERGED"'';
+            trustExitCode = true;
+          };
         };
         rebase = {
           autoSquash = true;
@@ -229,6 +250,7 @@ in
     };
     yazi = {
       enable = true;
+      shellWrapperName = "y";
       enableZshIntegration = true;
       settings = {
         mgr = {

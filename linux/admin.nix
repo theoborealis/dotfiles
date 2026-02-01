@@ -36,104 +36,19 @@
   nixpkgs.overlays = [ (final: prev: { hyprland = config.lib.nixGL.wrap prev.hyprland; }) ];
   xdg =
     let
-      schemeAppTuples = [
-        # browser & PDF
-        {
-          mime = "text/html";
-          app = "librewolf";
-        }
-        {
-          mime = "x-scheme-handler/http";
-          app = "librewolf";
-        }
-        {
-          mime = "x-scheme-handler/https";
-          app = "librewolf";
-        }
-        {
-          mime = "x-scheme-handler/about";
-          app = "librewolf";
-        }
-        {
-          mime = "x-scheme-handler/unknown";
-          app = "librewolf";
-        }
-        {
-          mime = "application/pdf";
-          app = "librewolf";
-        }
-        {
-          mime = "application/xhtml+xml";
-          app = "librewolf";
-        }
-        {
-          mime = "image/svg+xml";
-          app = "librewolf";
-        }
-        {
-          mime = "image/webp";
-          app = "librewolf";
-        }
-        # video
-        {
-          mime = "video/mp4";
-          app = "mpv";
-        }
-        {
-          mime = "video/webm";
-          app = "mpv";
-        }
-        {
-          mime = "video/mkv";
-          app = "mpv";
-        }
-        {
-          mime = "video/x-matroska";
-          app = "mpv";
-        }
-        {
-          mime = "video/quicktime";
-          app = "mpv";
-        }
-        {
-          mime = "video/x-msvideo";
-          app = "mpv";
-        }
-        {
-          mime = "video/mpeg";
-          app = "mpv";
-        }
-        # audio
-        {
-          mime = "audio/mpeg";
-          app = "mpv";
-        }
-        {
-          mime = "audio/mp4";
-          app = "mpv";
-        }
-        {
-          mime = "audio/flac";
-          app = "mpv";
-        }
-        {
-          mime = "audio/ogg";
-          app = "mpv";
-        }
-        {
-          mime = "audio/x-wav";
-          app = "mpv";
-        }
-        {
-          mime = "audio/x-aiff";
-          app = "mpv";
-        }
+      browserTypes = [
+        "text/html"
+        "text/xml"
+        "application/xhtml+xml"
+        "application/pdf"
+        "image/svg+xml"
+        "image/webp"
+        "x-scheme-handler/http"
+        "x-scheme-handler/https"
+        "x-scheme-handler/about"
+        "x-scheme-handler/unknown"
       ];
-      mimeMap = lib.foldl' (
-        acc: { mime, app }: acc // { "${mime}" = "${app}.desktop"; }
-      ) { } schemeAppTuples;
-      mimesFor =
-        wantedApp: map ({ mime, app }: mime) (lib.filter ({ mime, app }: app == wantedApp) schemeAppTuples);
+      makeDefaults = app: types: lib.genAttrs types (_: "${app}.desktop");
     in
     {
       enable = true;
@@ -144,29 +59,19 @@
         extraPortals = [ pkgs.xdg-desktop-portal-hyprland ];
         configPackages = [ pkgs.hyprland ];
       };
-      desktopEntries = {
-        librewolf = {
-          name = "librewolf";
-          exec = "/usr/bin/librewolf %u";
-          categories = [
-            "Network"
-            "WebBrowser"
-          ];
-          mimeType = mimesFor "librewolf";
-        };
-        mpv = {
-          name = "mpv";
-          exec = "${pkgs.mpv}/bin/mpv %u";
-          categories = [
-            "AudioVideo"
-            "Player"
-          ];
-          mimeType = mimesFor "mpv";
-        };
+      desktopEntries.librewolf = {
+        name = "librewolf";
+        exec = "/usr/bin/librewolf %u";
+        categories = [
+          "Network"
+          "WebBrowser"
+        ];
+        mimeType = browserTypes;
       };
       mimeApps = {
         enable = true;
-        defaultApplications = mimeMap;
+        defaultApplicationPackages = [ pkgs.mpv ];
+        defaultApplications = makeDefaults "librewolf" browserTypes;
       };
     };
   fonts.fontconfig.enable = true;
@@ -189,6 +94,7 @@
     bluetui
     exiv2
     fastfetch
+    inputs.sshf.packages.${pkgs.system}.default
     go-chromecast
     htop
     libarchive
@@ -303,10 +209,10 @@
           "match:class code, workspace 3"
           "match:class ableton live 12 suite.exe, workspace 4"
           "match:class code, group set vscode"
-          "match:class org.keepassxc.KeePassXC, match:title KeePassXC -.*Access Request, float on"
+          "match:class org.keepassxc.KeePassXC, match:title (KeePassXC -.*Access Request|Generate Password), float on"
+          "match:class org.keepassxc.KeePassXC, match:title (KeePassXC -.*Access Request|Generate Password), center on"
           "match:class org.keepassxc.KeePassXC, match:title KeePassXC -.*Access Request, pin on"
           "match:class org.keepassxc.KeePassXC, match:title KeePassXC -.*Access Request, stay_focused on"
-          "match:class org.keepassxc.KeePassXC, match:title KeePassXC -.*Access Request, center on"
         ];
         group.groupbar.enabled = false;
         misc = {
@@ -392,21 +298,6 @@
             RestartSec = 3; # prevents "start request repeated too quickly"
           };
         };
-        ssh-agent-proxy = {
-          Unit = {
-            Description = "SSH Agent proxy for work user";
-            After = [ "ssh-agent.service" ];
-            Requires = [ "ssh-agent.service" ];
-          };
-          Service = {
-            Type = "simple";
-            ExecStartPre = "-${pkgs.coreutils}/bin/rm -f /tmp/work-ssh-agent.sock";
-            ExecStart = "${pkgs.socat}/bin/socat UNIX-LISTEN:/tmp/work-ssh-agent.sock,fork,mode=600 UNIX-CONNECT:%t/ssh-agent";
-            ExecStartPost = "${pkgs.acl}/bin/setfacl -m u:work:rw /tmp/work-ssh-agent.sock";
-            Restart = "on-failure";
-          };
-          Install.WantedBy = [ "default.target" ];
-        };
       };
     };
 
@@ -472,6 +363,7 @@
           cpuMax = "15";
         in
         {
+          start-hyprland = "start-hyprland --no-nixgl";
           hmu = "nix flake update --flake ~/.config/home-manager && NIXPKGS_ALLOW_UNFREE=1 home-manager switch --flake ~/.config/home-manager#${username}@linux --impure";
           sd = "sudo shutdown now";
           rb = "sudo reboot now";
@@ -502,7 +394,6 @@
     };
     yazi = {
       enable = true;
-      enableZshIntegration = true;
       settings = {
         keymap.mgr.prepend_keymap = [
           {
@@ -836,6 +727,7 @@
 
   stylix = {
     enable = true;
+    targets.kde.enable = false;
     image = pkgs.fetchurl {
       url = "https://images.unsplash.com/photo-1765707886539-6d57024ddc2f";
       hash = "sha256-5B+znuF1860cuLMn5eyob7ZGaSmlgTNATgb3A6xD87U=";
