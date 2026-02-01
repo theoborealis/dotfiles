@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "nixpkgs/bde09022887110deb780067364a0818e89258968";
+    nixpkgs.url = "nixpkgs/6c38c88962fbd3a89447db1f5fa94772d83b851e";
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -13,14 +13,20 @@
       url = "github:nix-community/nixGL";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    sshf = {
+      url = "github:theoborealis/sshf";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = inputs@{ ... }:
+  outputs =
+    inputs@{ ... }:
     let
       linuxUser = "admin";
       workUser = "work";
       androidUser = "u0_a305";
-    in {
+    in
+    {
       homeConfigurations = {
         "${androidUser}@android" = import ./android {
           inherit inputs;
