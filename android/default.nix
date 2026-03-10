@@ -14,5 +14,5 @@ in inputs.home-manager.lib.homeManagerConfiguration {
     inherit homeDirectory;
   };
 
-  modules = [ inputs.stylix.homeModules.stylix ./home.nix ];
+  modules = [ inputs.stylix.homeModules.stylix inputs.nix-index-database.hmModules.nix-index ./home.nix ];
 }
